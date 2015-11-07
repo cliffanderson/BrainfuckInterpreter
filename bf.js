@@ -28,7 +28,7 @@ var fileReadYet = setInterval(function()
 	}
 });
 
-function runBFScript()
+function runBFScript() //Instructions: > < + - . , [ ] 
 {
 	//create an array for the memory we will be addressing
 	var memory = Array.apply(null, Array(Math.pow(2,16))).map(Number.prototype.valueOf,0);
@@ -40,6 +40,46 @@ function runBFScript()
 		var c = fileContents[i];
 		if(c === '') continue;
 
-		//TODO: handle instructions
+		switch(c)
+		{
+			case '>':
+				//dont overflow
+				if(pointer < Math.pow(2,16) - 1)
+					pointer++;
+				else
+					console.log('Error on instruction ' + i + ': Cannot set pointer to ' + Math.pow(2,16));
+				break;
+			case '<':
+				//don't go below 0
+				if(pointer > 0)
+					pointer--;
+				else
+					console.log('Error on instruction ' + i + ': Cannot set pointer to -1');
+				break;
+			case '+':
+				//data value cannot go above 255
+				if(memory[pointer] < 255)
+					memory[pointer]++;
+				else
+					console.log('Error on instruction ' + i + ': Data value cannot exceed 255 at position ' + pointer);
+				break;
+			case '-':
+				//data value cannot go below 0
+				if(memory[pointer] > 0)
+					memory[pointer] = memory[pointer] - 1;
+				else
+					console.log('Error on instruction ' + i + ': Data value cannot go below 0 at position ' + pointer);
+				break;
+			case '.':
+				process.stdout.write(String.fromCharCode(memory[pointer]));
+				break;
+			case ',':
+				memory[pointer] = process.stdin.read();
+				break;
+			case '[':
+				break;
+			case ']':
+				break;		
+		}
 	}	
 }
