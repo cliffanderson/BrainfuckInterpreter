@@ -19,6 +19,7 @@ fs.readFile(BFFileName, 'utf8', function(err, data)
 		fileContents = data;
 	}
 });
+
 var fileReadYet = setInterval(function()
 {
 	if(fileContents !== undefined)
@@ -28,47 +29,74 @@ var fileReadYet = setInterval(function()
 	}
 });
 
-function runBFScript() //Instructions: > < + - . , [ ] 
+function runBFScript() //Instructions: > < + - . , [ ]
 {
 	//create an array for the memory we will be addressing
 	var memory = Array.apply(null, Array(Math.pow(2,16))).map(Number.prototype.valueOf,0);
 	var pointer = 0;
 
-	//loop through all instructions
-	for(var i = 0; i < fileContents.length - 1; i++)
+	//array to store where to go when we hit the end of a loop or should not loop a loop
+	var loopData = [];
+
+	//used for calculating nested loops
+	var stack = [];
+	
+	//fill the loopData array with data
+	for(var i = 0; i < fileContents.length; i++)
 	{
 		var c = fileContents[i];
-		if(c === '') continue;
+
+		if(c === '[')
+		{
+			stack.push(i);
+		}
+		else if(c === ']')
+		{
+			loopData[i] = stack.pop();
+			loopData[loopData[i]] = i + 1;
+		}
+	}
+
+	//loop through all instructions
+	for(var i = 0; i < fileContents.length; i++)
+	{
+		var c = fileContents[i];
 
 		switch(c)
 		{
 			case '>':
 				//dont overflow
 				if(pointer < Math.pow(2,16) - 1)
+				{
 					pointer++;
+				}
 				else
 					console.log('Error on instruction ' + i + ': Cannot set pointer to ' + Math.pow(2,16));
 				break;
 			case '<':
 				//don't go below 0
 				if(pointer > 0)
+				{
 					pointer--;
+				}
 				else
 					console.log('Error on instruction ' + i + ': Cannot set pointer to -1');
 				break;
 			case '+':
-				//data value cannot go above 255
+				//data value overflows to 0
 				if(memory[pointer] < 255)
+				{
 					memory[pointer]++;
+				}
 				else
-					console.log('Error on instruction ' + i + ': Data value cannot exceed 255 at position ' + pointer);
+					memory[pointer] = 0;
 				break;
 			case '-':
-				//data value cannot go below 0
+				//data value underflows to 255
 				if(memory[pointer] > 0)
 					memory[pointer] = memory[pointer] - 1;
 				else
-					console.log('Error on instruction ' + i + ': Data value cannot go below 0 at position ' + pointer);
+					memory[pointer] = 255;
 				break;
 			case '.':
 				process.stdout.write(String.fromCharCode(memory[pointer]));
@@ -77,9 +105,20 @@ function runBFScript() //Instructions: > < + - . , [ ]
 				memory[pointer] = process.stdin.read();
 				break;
 			case '[':
+				//if this current memory cell is true, continue
+				//else go to the matching ]
+				if(memory[pointer] === 0)
+				{
+					//do not run this loop, skip it
+					i = loopData[i];
+				}
 				break;
 			case ']':
-				break;		
+				//always go back to the beginning of this loop
+				i = loopData[i];
+				break;
+			//if a non-instruction character is encountered, just ignore it
 		}
-	}	
+
+	}
 }
