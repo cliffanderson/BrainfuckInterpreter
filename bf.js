@@ -40,7 +40,7 @@ function runBFScript() //Instructions: > < + - . , [ ]
 
 	//used for calculating nested loops
 	var stack = [];
-	
+
 	//fill the loopData array with data
 	for(var i = 0; i < fileContents.length; i++)
 	{
@@ -65,60 +65,71 @@ function runBFScript() //Instructions: > < + - . , [ ]
 		switch(c)
 		{
 			case '>':
-				//dont overflow
-				if(pointer < Math.pow(2,16) - 1)
-				{
-					pointer++;
-				}
-				else
-					console.log('Error on instruction ' + i + ': Cannot set pointer to ' + Math.pow(2,16));
-				break;
+					//dont overflow
+					if(pointer < Math.pow(2,16) - 1)
+					{
+						pointer++;
+						debug('incremented pointer to ' + pointer);
+					}
+					else
+						console.log('Error on instruction ' + i + ': Cannot set pointer to ' + Math.pow(2,16));
+					break;
 			case '<':
-				//don't go below 0
-				if(pointer > 0)
-				{
-					pointer--;
-				}
-				else
-					console.log('Error on instruction ' + i + ': Cannot set pointer to -1');
-				break;
+					//don't go below 0
+					if(pointer > 0)
+					{
+						pointer--;
+						debug('Decremented pointer to ' + pointer);
+					}
+					else
+						console.log('Error on instruction ' + i + ': Cannot set pointer to -1');
+					break;
 			case '+':
-				//data value overflows to 0
-				if(memory[pointer] < 255)
-				{
-					memory[pointer]++;
-				}
-				else
-					memory[pointer] = 0;
-				break;
+					//data value overflows to 0
+					if(memory[pointer] < 255)
+					{
+						memory[pointer]++;
+					}
+					else
+						memory[pointer] = 0;
+					debug('Incremented memory value to ' + memory[pointer]);
+					break;
 			case '-':
-				//data value underflows to 255
-				if(memory[pointer] > 0)
-					memory[pointer] = memory[pointer] - 1;
-				else
-					memory[pointer] = 255;
-				break;
+					//data value underflows to 255
+					if(memory[pointer] > 0)
+						memory[pointer] = memory[pointer] - 1;
+					else
+						memory[pointer] = 255;
+					debug('Decremented memory value to ' + memory[pointer]);
+					break;
 			case '.':
-				process.stdout.write(String.fromCharCode(memory[pointer]));
-				break;
+					process.stdout.write(String.fromCharCode(memory[pointer]));
+					break;
 			case ',':
-				memory[pointer] = process.stdin.read();
-				break;
+					memory[pointer] = process.stdin.read();
+					break;
 			case '[':
-				//if this current memory cell is true, continue
-				//else go to the matching ]
-				if(memory[pointer] === 0)
-				{
-					//do not run this loop, skip it
-					i = loopData[i];
-				}
-				break;
+					//if this current memory cell is true, continue
+					//else go to the matching ]
+					if(memory[pointer] === 0)
+					{
+						//do not run this loop, skip it
+						debug('Going back to instruction ' + loopData[i]);
+						//-1 because i will be incremented at the end of the for loop
+						i = loopData[i] - 1;
+					}
+					break;
 			case ']':
-				//always go back to the beginning of this loop
-				i = loopData[i];
-				break;
-			//if a non-instruction character is encountered, just ignore it
+					//always go back to the beginning of this loop
+					debug('Going back to instruction ' + loopData[i]);
+					//-1 because i will be incremented at the end of the for loop
+					i = loopData[i] - 1;
+					break;
+					//if a non-instruction character is encountered, just ignore it
 		}
-
 	}
+}
+function debug(v)
+{
+//	console.log(v);
 }
